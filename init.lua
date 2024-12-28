@@ -7,7 +7,7 @@ local function fail(s, ...)
   }
 end
 
--- 在同步上下文中获取当前悬停的文件
+-- Get the currently hovered file in sync context
 local get_hovered_file = ya.sync(function()
   local hovered = cx.active.current.hovered
   if not hovered then
@@ -16,14 +16,14 @@ local get_hovered_file = ya.sync(function()
   return tostring(hovered.url)
 end)
 
--- 在同步上下文中获取yanked文件信息
+-- Get yanked file information in sync context
 local get_yanked_info = ya.sync(function()
-  -- 检查是否有yanked文件
+  -- Check if there's any yanked file
   if #cx.yanked == 0 then
     return nil, nil, "No file in clipboard"
   end
 
-  -- 计算yanked文件数量并获取第一个文件
+  -- Calculate yanked file count and get the first file
   local count = 0
   local first_url = nil
   for _, url in pairs(cx.yanked) do
@@ -33,7 +33,7 @@ local get_yanked_info = ya.sync(function()
     end
   end
 
-  -- 如果超过一个文件，返回错误
+  -- Return error if more than one file
   if count > 1 then
     return nil, nil, "Multiple files in clipboard. Please yank only one file"
   end
@@ -41,7 +41,7 @@ local get_yanked_info = ya.sync(function()
   return first_url, cx.yanked.is_cut
 end)
 
--- 检查文件类型是否匹配
+-- Check if file types are compatible
 local function check_files_compatibility(source_cha, target_cha)
   if source_cha.is_dir ~= target_cha.is_dir then
     if source_cha.is_dir then
@@ -54,7 +54,7 @@ local function check_files_compatibility(source_cha, target_cha)
 end
 
 local function entry()
-  -- 获取悬停的文件
+  -- Get the hovered file
   local target, get_target_err = get_hovered_file()
   if not target then
     return fail(get_target_err)
@@ -62,7 +62,7 @@ local function entry()
 
   ya.dbg("target: ", target)
 
-  -- 获取yanked的文件
+  -- Get the yanked file
   local source, is_cut, get_source_err = get_yanked_info()
   if not source then
     return fail(get_source_err)
@@ -70,11 +70,11 @@ local function entry()
 
   ya.dbg("source: ", source, " is_cut: ", is_cut)
 
-  -- 转换为Url对象
+  -- Convert to Url objects
   local target_url = Url(target)
   local source_url = Url(source)
 
-  -- 确保源文件和目标文件都存在且可读
+  -- Ensure both source and target files exist and are readable
   local source_cha, source_err = fs.cha(source_url)
   if not source_cha then
     return fail("Source file does not exist or not accessible: %s", source_err or "unknown error")
@@ -85,17 +85,17 @@ local function entry()
     return fail("Target file does not exist or not accessible: %s", target_err or "unknown error")
   end
 
-  -- 检查文件类型兼容性
+  -- Check file type compatibility
   local compatible, err = check_files_compatibility(source_cha, target_cha)
   if not compatible then
     return fail(err)
   end
 
-  -- 准备确认信息
+  -- Prepare confirmation message
   local type_str = source_cha.is_dir and "dir" or "file"
   local op_str = is_cut and "mv" or "cp"
 
-  -- 在替换前确认
+  -- Confirm before replacement
   local confirm = ya.which {
     cands = {
       { on = "y", desc = string.format("%s %s '%s' to replace '%s'",
@@ -107,7 +107,7 @@ local function entry()
     },
   }
 
-  -- 如果用户取消或选择否，则返回
+  -- Return if user cancels or chooses no
   if not confirm or confirm == 2 then
     ya.dbg("user canceled")
     return
@@ -115,10 +115,10 @@ local function entry()
 
   ya.dbg("user confirmed")
 
-  -- 根据操作类型和文件类型准备命令
+  -- Prepare command based on operation type and file type
   local shell_cmd
   if source_cha.is_dir then
-    -- 对于目录，先删除目标目录，然后再复制/移动
+    -- For directories, remove target directory first, then copy/move
     if is_cut then
       shell_cmd = string.format("rm -rf %s && mv -f %s %s",
         ya.quote(tostring(target_url)),
@@ -131,7 +131,7 @@ local function entry()
         ya.quote(tostring(target_url)))
     end
   else
-    -- 对于普通文件，保持原来的逻辑
+    -- For regular files, keep original logic
     local cmd = is_cut and "mv -f" or "cp -f"
     shell_cmd = string.format("%s %s %s",
       cmd,
@@ -141,7 +141,7 @@ local function entry()
 
   ya.dbg("shell_cmd: ", shell_cmd)
 
-  -- 执行替换操作
+  -- Execute replacement operation
   local ok, err = Command("sh")
     :args({ "-c", shell_cmd })
     :stderr(Command.PIPED)
@@ -153,12 +153,12 @@ local function entry()
 
   ya.dbg("replace success")
 
-  -- 刷新当前目录
+  -- Refresh current directory
   ya.manager_emit("reload", { "current" })
 
   ya.dbg("reload current")
 
-  -- 显示成功消息
+  -- Show success message
   ya.notify {
     title = "Replace",
     content = string.format("Successfully %s and replaced %s '%s' with '%s'",
