@@ -55,17 +55,17 @@ end
 
 local function entry()
   -- 获取悬停的文件
-  local target, target_err = get_hovered_file()
+  local target, get_target_err = get_hovered_file()
   if not target then
-    return fail(target_err)
+    return fail(get_target_err)
   end
 
   ya.dbg("target: ", target)
 
   -- 获取yanked的文件
-  local source, is_cut, source_err = get_yanked_info()
+  local source, is_cut, get_source_err = get_yanked_info()
   if not source then
-    return fail(source_err)
+    return fail(get_source_err)
   end
 
   ya.dbg("source: ", source, " is_cut: ", is_cut)
