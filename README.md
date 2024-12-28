@@ -2,6 +2,10 @@
 
 A Yazi plugin that allows you to replace the currently hovered file/folder with previously yanked items.
 
+## Demo
+
+https://github.com/user-attachments/assets/e696650d-2f02-4a8d-8a75-95bf30f2b362
+
 ## Features
 
 - Replace a file/folder with previously yanked (copied/cut) items
