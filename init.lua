@@ -116,16 +116,28 @@ local function entry()
   ya.dbg("user confirmed")
 
   -- 根据操作类型和文件类型准备命令
-  local cmd
-  if is_cut then
-    cmd = source_cha.is_dir and "mv -f" or "mv -f"
+  local shell_cmd
+  if source_cha.is_dir then
+    -- 对于目录，先删除目标目录，然后再复制/移动
+    if is_cut then
+      shell_cmd = string.format("rm -rf %s && mv -f %s %s",
+        ya.quote(tostring(target_url)),
+        ya.quote(tostring(source_url)),
+        ya.quote(tostring(target_url)))
+    else
+      shell_cmd = string.format("rm -rf %s && cp -r %s %s",
+        ya.quote(tostring(target_url)),
+        ya.quote(tostring(source_url)),
+        ya.quote(tostring(target_url)))
+    end
   else
-    cmd = source_cha.is_dir and "cp -rf" or "cp -f"
+    -- 对于普通文件，保持原来的逻辑
+    local cmd = is_cut and "mv -f" or "cp -f"
+    shell_cmd = string.format("%s %s %s",
+      cmd,
+      ya.quote(tostring(source_url)),
+      ya.quote(tostring(target_url)))
   end
-
-  ya.dbg("cmd: ", cmd)
-
-  local shell_cmd = string.format("%s %s %s", cmd, ya.quote(tostring(source_url)), ya.quote(tostring(target_url)))
 
   ya.dbg("shell_cmd: ", shell_cmd)
 
