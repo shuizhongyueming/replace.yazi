@@ -92,17 +92,17 @@ local function entry()
   end
 
   -- 准备确认信息
-  local type_str = source_cha.is_dir and "directory" or "file"
-  local op_str = is_cut and "move" or "copy"
+  local type_str = source_cha.is_dir and "dir" or "file"
+  local op_str = is_cut and "mv" or "cp"
 
   -- 在替换前确认
   local confirm = ya.which {
     cands = {
-      { on = "y", desc = string.format("%s and replace %s '%s' with '%s'",
+      { on = "y", desc = string.format("%s %s '%s' to replace '%s'",
         op_str:sub(1,1):upper() .. op_str:sub(2),
         type_str,
-        target_url:name() or "target",
-        source_url:name() or "source") },
+        source_url:name() or "source",
+        target_url:name() or "target") },
       { on = "n", desc = "Cancel" },
     },
   }
