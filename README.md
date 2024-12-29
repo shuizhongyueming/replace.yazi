@@ -4,7 +4,7 @@ A Yazi plugin that allows you to replace the currently hovered file/folder with 
 
 ## Demo
 
-https://github.com/user-attachments/assets/e696650d-2f02-4a8d-8a75-95bf30f2b362
+https://github.com/user-attachments/assets/311bd7e8-eebe-4003-b95b-e445dfee25f9
 
 ## Features
 
